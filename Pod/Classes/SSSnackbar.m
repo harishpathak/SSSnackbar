@@ -307,6 +307,54 @@ static SSSnackbar *currentlyVisibleSnackbar = nil;
     
     [self addConstraints:constraints];
     [self layoutIfNeeded];
+    
+    UISwipeGestureRecognizer *swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipe:)];
+    UISwipeGestureRecognizer *swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(handleSwipe:)];
+    
+    // Setting the swipe direction.
+    [swipeLeft setDirection:UISwipeGestureRecognizerDirectionLeft];
+    [swipeRight setDirection:UISwipeGestureRecognizerDirectionRight];
+    
+    [self addGestureRecognizer:swipeLeft];
+    [self addGestureRecognizer:swipeRight];
+    
 }
+
+-(void)handleSwipe:(UISwipeGestureRecognizer *)sender{
+    if(sender.direction==UISwipeGestureRecognizerDirectionLeft){
+        [self dismissSidewaysAnimated:YES];
+    }else{
+        [self dismissSidewaysAnimated:NO];
+    }
+    
+}
+
+- (void)dismissSidewaysAnimated:(BOOL)isLeft {
+    
+    [self invalidateTimer];
+    currentlyVisibleSnackbar = nil;
+    
+        [UIView animateWithDuration:0.5 animations:^{
+            CGRect frame  = [self frame];
+            if(isLeft){
+                frame.origin.x = -self.frame.size.width;
+                
+            }else{
+                frame.origin.x = 2*self.frame.size.width;
+            }
+            self.frame = frame;
+            
+        } completion:^(BOOL finished) {
+            [self.superview removeConstraints:self.visibleVerticalLayoutConstraints];
+            [self.superview addConstraints:self.hiddenVerticalLayoutConstraints];
+            [self.superview layoutIfNeeded];
+            
+            if (!self.actionBlockDispatched)
+                [self executeDismissalBlock];
+            [self removeFromSuperview];
+        }];
+    
+}
+
 
 @end
